@@ -46,7 +46,8 @@ def buy_entry_credits(factoid_address, ec_address):
         data=RPC.encode('factoid-balance', {'address': factoid_address})
     )
     balance = RPC.decode(balance_request.text)['balance']
-        
+
+    # Get the current transaction fee
     # Get a unique transaction name
     TX_NAME = uuid.uuid4().hex
     

@@ -55,17 +55,16 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
         balance = amount
         
     # Get a unique transaction name
-    #    TX_NAME = uuid.uuid4().hex[:10]
-    TX_NAME = '@'
+    TX_NAME = uuid.uuid4().hex[:30]
 
     # Start a new transaction
-    foo= requests.post(
+    res = requests.post(
         url=WALLET_URL,
-        data=RPC.encode('new-transaction', {'tx_name': TX_NAME})
+        data=RPC.encode('new-transaction', {'tx-name': TX_NAME})
     )
-    print(foo.text)
+
     # Add all funds from our factoid address as an input
-    requests.post(
+    res = requests.post(
         url=WALLET_URL,
         data=RPC.encode('add-input', {'tx-name': TX_NAME,
                                       'address': factoid_address,
@@ -73,22 +72,22 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
     )
 
     # Route the entire input to the entry credit output
-    requests.post(
+    res = requests.post(
         url=WALLET_URL,
-        data=RPC.encode('add-input', {'tx-name': TX_NAME,
-                                      'address': ec_address,
-                                      'amount': balance})
+        data=RPC.encode('add-ec-output', {'tx-name': TX_NAME,
+                                          'address': ec_address,
+                                          'amount': balance})
     )
 
     # Specify that the transaction fee should be subtracted from the entry credit output
-    requests.post(
+    res = requests.post(
         url=WALLET_URL,
         data=RPC.encode('sub-fee', {'tx-name': TX_NAME,
                                     'address': ec_address})
     )
 
     # Sign the transaction
-    requests.post(
+    res = requests.post(
         url=WALLET_URL,
         data=RPC.encode('sign-transaction', {'tx-name': TX_NAME})
     )
@@ -106,8 +105,8 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
         url=DAEMON_URL,
         data=RPC.encode('factoid-submit', {'transaction': transaction_hex})
     )
-    response = RPC.decode(submit_request.text)['result']['message']
-
+    response = RPC.decode(submit_request.text)
+    print(response)
     if response != 'Successfully submitted the transaction':
         raise IOError('Transaction submission failed!')
 
@@ -115,3 +114,4 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
 buy_entry_credits('FA3bNrrt7F34ANPDnRdQESRhN3SD3MQJqUZWdpbKGX2J66wxBFbP',
                   'EC1rV8ZrsscKmTA2K4CX3xQRPki2FM18E79MRoJuiAq9g4yGoFhB',
                   amount=100000)
+ 

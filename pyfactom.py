@@ -112,35 +112,49 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
     response = decode(submit_request.text)['message']
 
 
-def new_chain(chain_name, ec_address):
-
+def new_chain(ec_address):
+    # Composing the chain
     compose_chain = requests.post(
         url=WALLET_URL,
         data=encode('compose-chain',
                     {'chain': {
                         'firstentry': {
-                            "extids": [chain_name,'1234'],
-                            "content": "elliot"
+                            "extids": [],
+                            "content": ""
                         }
                     },
                         "ecpub": ec_address}
                     )
     )
-    print(encode('compose-chain',
-                {'chain': {
-                    'firstentry': {
-                        "extids": [chain_name,'1234'],
-                        "content": "elliot"
-                    }
-                },
-                    "ecpub": ec_address}
-                ))
-    print(compose_chain.text)
     response = decode(compose_chain.text)
     commit_params, reveal_params = response['commit']['params'], response['reveal']['params']
 
-    print(commit_params)
-    print(reveal_params)
+    # Commiting the chain
+    commit_chain = requests.post(
+        url=DAEMON_URL,
+        data=encode("commit-chain", commit_params)
+            )
 
-new_chain('test', EC_ADDRESS)
+    response = decode(commit_chain.text)
+
+    # Reveal the chain
+    reveal_chain = requests.post(
+        url=DAEMON_URL,
+        data=encode("reveal-chain", reveal_params)
+            )
+    response = decode(reveal_chain.text)
+
+    # Take the chain_id through entry method
+    entry = requests.post(
+        url=DAEMON_URL,
+        data=encode("entry", {'hash':decode(reveal_chain.text)['entryhash']})
+            )
+    response = decode(entry.text)
+    chain_id= response['chainid']
+    print(chain_id)
+
+
+
+
+new_chain(EC_ADDRESS)
 #buy_entry_credits(FACTOID_ADDRESS, EC_ADDRESS, amount=100000)

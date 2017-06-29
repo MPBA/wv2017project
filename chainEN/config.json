@@ -1,0 +1,15 @@
+{
+    "bitcoin": {
+        "ip": "13.90.154.24",
+        "port": "8332",
+        "user": "webvalley2017",
+        "pass": "EAx5QvAhfE"
+    },
+
+    "redis": {
+        "ip": "13.90.154.24",
+        "port": "6379",
+        "pass": "EAx5QvAhfE"
+    }
+}
+

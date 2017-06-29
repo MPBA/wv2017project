@@ -3,23 +3,25 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 from matplotlib import patches
 import json
-from os import listdir
+import os.path
 
 def loadSloth(imagesDir, annotationPos):
     # loading the annotations
-    fileNames = listdir(imagesDir)
     file = open(annotationPos, "r")
     loaded=json.load(file)
     d={}
     for i in loaded:
-        d[i["filename"]]=i["annotations"]
+        annotations=[a for a in i['annotations'] if a['class']=='rect']
+        d[i["filename"]]= annotations
     
     # populating X and y
     X=[]
     y=[]
-    for imageName in fileNames:
-        X.append(ndimage.imread(imagesDir+imageName))
-        y.append(d[imageName])
+    for key,value in d.items():
+        X.append(ndimage.imread(imagesDir+os.path.basename(key)))
+        y.append(value)
+        
+    fileNames=d.keys()
     return X,y,fileNames
 
 def saveSloth(fileNames, y):
@@ -27,7 +29,7 @@ def saveSloth(fileNames, y):
     for idx, imageName in enumerate(fileNames):
         entry={
             "annotations": y[idx],
-            "class": "image",
+            "class": "rect",
             "filename": imageName
         }
         annotations.append(entry)

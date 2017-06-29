@@ -1,4 +1,6 @@
-import json, requests, uuid
+import json
+import requests
+import uuid
 
 DAEMON_URL = 'http://13.90.96.240:8088/v2'
 WALLET_URL = 'http://13.90.96.240:8089/v2'
@@ -15,19 +17,20 @@ def encode(method, params=''):
         'params': params
     })
 
+
 def decode(message):
     return json.loads(message)['result']
 
 
 def make_wallets():
     '''Creates factoid and entry credit wallets on the server and returns a tuple of the addresses.'''
-    
+
     factoid_request = requests.post(
         url=WALLET_URL,
         data=encode('generate-factoid-address'),
     )
 
-    ec_request =  requests.post(
+    ec_request = requests.post(
         url=WALLET_URL,
         data=encode('generate-ec-address'),
     )
@@ -35,14 +38,15 @@ def make_wallets():
     return (decode(factoid_request.text)['public'],
             decode(ec_request.text)['public'])
 
+
 def buy_entry_credits(factoid_address, ec_address, amount=None):
     '''
-    Deposits entry credits in ec_address using funds from factoid_address. 
+    Deposits entry credits in ec_address using funds from factoid_address.
     If amount is None, use all the funds, else use amount * 10e8 Factoids.
     '''
 
     fee = 10**5
-    
+
     # Get the balance of factoid_address (in Factoshis = Factoids * 10e8) if amount is None
     if amount == None:
         balance_request = requests.post(
@@ -53,7 +57,7 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
         amount = max(balance - fee, 0)
     else:
         amount = max(amount - fee, 0)
-        
+
     # Get a unique transaction name
     TX_NAME = uuid.uuid4().hex[:30]
 
@@ -67,23 +71,23 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
     res = requests.post(
         url=WALLET_URL,
         data=encode('add-input', {'tx-name': TX_NAME,
-                                      'address': factoid_address,
-                                      'amount': amount})
+                                  'address': factoid_address,
+                                  'amount': amount})
     )
 
     # Route the entire input to the entry credit output
     res = requests.post(
         url=WALLET_URL,
         data=encode('add-ec-output', {'tx-name': TX_NAME,
-                                          'address': ec_address,
-                                          'amount': amount})
+                                      'address': ec_address,
+                                      'amount': amount})
     )
 
     # Specify that the transaction fee should be subtracted from the entry credit output
     res = requests.post(
         url=WALLET_URL,
         data=encode('add-fee', {'tx-name': TX_NAME,
-                                    'address': factoid_address})
+                                'address': factoid_address})
     )
 
     # Sign the transaction
@@ -107,4 +111,36 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
     )
     response = decode(submit_request.text)['message']
 
-buy_entry_credits(FACTOID_ADDRESS, EC_ADDRESS, amount=100000)
+
+def new_chain(chain_name, ec_address):
+
+    compose_chain = requests.post(
+        url=WALLET_URL,
+        data=encode('compose-chain',
+                    {'chain': {
+                        'firstentry': {
+                            "extids": [chain_name,'1234'],
+                            "content": "elliot"
+                        }
+                    },
+                        "ecpub": ec_address}
+                    )
+    )
+    print(encode('compose-chain',
+                {'chain': {
+                    'firstentry': {
+                        "extids": [chain_name,'1234'],
+                        "content": "elliot"
+                    }
+                },
+                    "ecpub": ec_address}
+                ))
+    print(compose_chain.text)
+    response = decode(compose_chain.text)
+    commit_params, reveal_params = response['commit']['params'], response['reveal']['params']
+
+    print(commit_params)
+    print(reveal_params)
+
+new_chain('test', EC_ADDRESS)
+#buy_entry_credits(FACTOID_ADDRESS, EC_ADDRESS, amount=100000)

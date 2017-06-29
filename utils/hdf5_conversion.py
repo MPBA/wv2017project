@@ -2,9 +2,6 @@ import h5py
 import numpy as np
 import slothutils
 
-imgs = './JPG_Images/'
-annotations = './Annotated_Images/one.json'
-
 def jpg_to_h5(imgs, annotations):
     X, y, fileNames = slothutils.loadSloth(imgs, annotations)
     

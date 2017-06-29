@@ -1,6 +1,4 @@
-import json
-import requests
-import uuid
+import json, requests, uuid, time, hashlib
 
 DAEMON_URL = 'http://13.90.96.240:8088/v2'
 WALLET_URL = 'http://13.90.96.240:8089/v2'
@@ -112,20 +110,35 @@ def buy_entry_credits(factoid_address, ec_address, amount=None):
     response = decode(submit_request.text)['message']
 
 
+def chain_id(extids):
+    hs = hashlib.sha256()
+    
+    for id in map(lambda s: s.encode('utf-8'), extids):
+        h = hashlib.sha256()
+        h.update(id)
+        hs.update(h.digest())
+                  
+    return hs.hexdigest()
+
 def new_chain(ec_address):
     # Composing the chain
+    extid = uuid.uuid4().hex
+    extids = [extid[i:i+4] for i in range(0, len(extid), 4)]
     compose_chain = requests.post(
         url=WALLET_URL,
         data=encode('compose-chain',
-                    {'chain': {
-                        'firstentry': {
-                            "extids": [],
-                            "content": ""
-                        }
-                    },
-                        "ecpub": ec_address}
-                    )
+                    {
+                        'chain': {
+                            'firstentry': {
+                                "extids": extids,
+                                "content": ''
+                            }
+                        },
+                        "ecpub": ec_address,
+                    }
+        )
     )
+
     response = decode(compose_chain.text)
     commit_params, reveal_params = response['commit']['params'], response['reveal']['params']
 
@@ -144,17 +157,8 @@ def new_chain(ec_address):
             )
     response = decode(reveal_chain.text)
 
-    # Take the chain_id through entry method
-    entry = requests.post(
-        url=DAEMON_URL,
-        data=encode("entry", {'hash':decode(reveal_chain.text)['entryhash']})
-            )
-    response = decode(entry.text)
-    chain_id= response['chainid']
-    print(chain_id)
+    # Return the calculated ChainID
+    return chain_id(extids)
 
-
-
-
-new_chain(EC_ADDRESS)
+print(new_chain(EC_ADDRESS))
 #buy_entry_credits(FACTOID_ADDRESS, EC_ADDRESS, amount=100000)

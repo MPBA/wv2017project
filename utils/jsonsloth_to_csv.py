@@ -25,13 +25,25 @@ def loadSloth(imagesDir, annotationPos):
 	#return X,y,fileNames
 	return y, fileNames
 
-y,filenames = loadSloth("./conv/","04_Andrea_Zanin.json")
-print(len(y),len(filenames))
+imagesDir = "./conv/"
+jsonName = "04_Andrea_Zanin.json"
+xmin_img = 1
+ymin_img = 1
+xmax_img = 719
+ymax_img = 1279
+
+y,filenames = loadSloth(imagesDir,jsonName)
 
 f = open("annotations.csv", "w")
 lines = []
-for index, filename in enumerate(filenames):
-	filename = filename.split("/")[-1]
+for index, filepath in enumerate(filenames):
+	filename = filepath.split("/")[-1]
 	for box in y[index]:
-		f.write(filename+", "+str(box['x'])+", "+str(box['x']+box['width'])+", "+str(box['y'])+", "+str(box['y']+box['height'])+"\n")
+		#jsonName filepath, filename, xmin, ymin, xmax, ymax, class
+		xmin = str(max(xmin_img, box['x']))
+		ymin = str(max(ymin_img, box['y']))
+		xmax = str(min(xmax_img, box['x']+box['width']))
+		ymax = str(min(ymax_img, box['y']+box['height']))
+		cl = "apple"
+		f.write(jsonName+", "+filepath+", "+filename+", "+xmin+", "+ymin+", "+xmax+", "+ymax+", "+cl+"\n")
 f.close()

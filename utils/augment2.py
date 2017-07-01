@@ -6,6 +6,10 @@ class Generator(object):
                  brightness_var=0.5,
                  contrast_var=0.5,
                  lighting_std=0.5,
+                 saturation_prob=0.5,
+                 brightness_prob=0.5,
+                 contrast_prob=0.5,
+                 lighting_prob=0.5,
                  hflip_prob=0.5,
                  vflip_prob=0.5):
         self.gt = gt
@@ -32,35 +36,44 @@ class Generator(object):
         self.vflip_prob = vflip_prob
 
     def grayscale(self, rgb):
-        return rgb.dot([0.299, 0.587, 0.114])
+        rgb.dot([0.299, 0.587, 0.114])
+        return rgb
 
     def saturation(self, rgb):
-        gs = self.grayscale(rgb)
-        alpha = 2 * np.random.random() * self.saturation_var
-        alpha += 1 - self.saturation_var
-        rgb = rgb * alpha + (1 - alpha) * gs[:, :, None]
-        return np.clip(rgb, 0, 255)
+        if np.random.random() < self.hflip_prob:
+            gs = self.grayscale(rgb)
+            alpha = 2 * np.random.random() * self.saturation_var
+            alpha += 1 - self.saturation_var
+            rgb = rgb * alpha + (1 - alpha) * gs[:, :, None]
+            rgb =  np.clip(rgb, 0, 255)
+        return rgb
 
     def brightness(self, rgb):
-        alpha = 2 * np.random.random() * self.brightness_var
-        alpha += 1 - self.saturation_var
-        rgb = rgb * alpha
-        return np.clip(rgb, 0, 255)
+        if np.random.random() < self.hflip_prob:
+            alpha = 2 * np.random.random() * self.brightness_var
+            alpha += 1 - self.saturation_var
+            rgb = rgb * alpha
+            rgb = np.clip(rgb, 0, 255)
+        return rgb
 
     def contrast(self, rgb):
-        gs = self.grayscale(rgb).mean() * np.ones_like(rgb)
-        alpha = 2 * np.random.random() * self.contrast_var
-        alpha += 1 - self.contrast_var
-        rgb = rgb * alpha + (1 - alpha) * gs
-        return np.clip(rgb, 0, 255)
+        if np.random.random() < self.hflip_prob:
+            gs = self.grayscale(rgb).mean() * np.ones_like(rgb)
+            alpha = 2 * np.random.random() * self.contrast_var
+            alpha += 1 - self.contrast_var
+            rgb = rgb * alpha + (1 - alpha) * gs
+            rgb = np.clip(rgb, 0, 255)
+        return rgb
 
     def lighting(self, img):
-        cov = np.cov(img.reshape(-1, 3) / 255.0, rowvar=False)
-        eigval, eigvec = np.linalg.eigh(cov)
-        noise = np.random.randn(3) * self.lighting_std
-        noise = eigvec.dot(eigval * noise) * 255
-        img += noise
-        return np.clip(img, 0, 255)
+        if np.random.random() < self.lighting_prob:
+            cov = np.cov(img.reshape(-1, 3) / 255.0, rowvar=False)
+            eigval, eigvec = np.linalg.eigh(cov)
+            noise = np.random.randn(3) * self.lighting_std
+            noise = eigvec.dot(eigval * noise) * 255
+            img += noise
+            img = np.clip(img, 0, 255)
+        return img
 
     def flipH(self, X, y):
         if np.random.random() < self.vflip_prob:

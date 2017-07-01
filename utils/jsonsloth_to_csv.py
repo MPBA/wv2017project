@@ -26,8 +26,8 @@ def loadSloth(imagesDir, annotationPos):
 	#return X,y,fileNames
 	return y, fileNames
 
-imagesDir = "./conv/"
-jsonNames = sys.argv[1:]
+imagesDir = sys.argv[1]
+jsonNames = sys.argv[2:]
 xmin_img = 1
 ymin_img = 1
 xmax_img = 719
@@ -40,12 +40,14 @@ for jsonName in jsonNames:
 	lines = []
 	for index, filepath in enumerate(filenames):
 		filename = filepath.split("/")[-1]
+        image=ndimage.imread(filepath)
+        im_height, im_width, _ = image.shape
 		for box in y[index]:
 			#jsonName filepath, filename, xmin, ymin, xmax, ymax, class
-			xmin = str(max(xmin_img, box['x']))
-			ymin = str(max(ymin_img, box['y']))
-			xmax = str(min(xmax_img, box['x']+box['width']))
-			ymax = str(min(ymax_img, box['y']+box['height']))
+			xmin = str(max(xmin_img, box['x']) / im_width)
+			ymin = str(max(ymin_img, box['y']) / im_height)
+			xmax = str(min(xmax_img, box['x']+box['width']) / im_width)
+			ymax = str(min(ymax_img, box['y']+box['height']) / im_height)
 			cl = "apple"
-			f.write(jsonName+", "+filepath+", "+filename+", "+xmin+", "+ymin+", "+xmax+", "+ymax+", "+cl+"\n")
+			f.write(', '.join(jsonName, filepath, filename, xmin, ymin, xmax, ymax, cl,"\n"))
 	f.close()

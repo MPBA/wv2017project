@@ -9,9 +9,6 @@ database = redis.StrictRedis(host=config['redis']['ip'],
                              port=config['redis']['port'],
                              password=config['redis']['pass'])
 
-USERNAME = config['tierion']['user']
-PASSWORD = config['tierion']['pass']
-
 HEADERS, AUTH_TIMEOUT = None, 0
 
 def _set_headers():

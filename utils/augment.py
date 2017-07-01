@@ -92,7 +92,7 @@ def rotate180(X,y):
 
     return XX, yy
 
-def augmentImage(X,y):
+def increaseImages(X,y):
     newXs = []
     newYs = []
     newXs.extend(X)

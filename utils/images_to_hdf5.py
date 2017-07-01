@@ -5,7 +5,7 @@ from scipy import ndimage
 import matplotlib.image as mpimg
 
 with h5py.File("images.h5", "w") as file:
-    for p,d,files in os.walk("./trees/images/"):
+    for p,d,files in os.walk(sys.argv[1]):
         x_dset = file.create_dataset('images', 
                                        shape=[len(files), 
                                               1840, 3264, 3], 

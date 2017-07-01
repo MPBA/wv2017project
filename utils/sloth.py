@@ -8,30 +8,30 @@ import os.path
 def loadSloth(imagesDir, annotationPos):
     # loading the annotations
     file = open(annotationPos, "r")
-    loaded=json.load(file)
-    d={}
+    loaded = json.load(file)
+    d = {}
     for i in loaded:
-        annotations=[a for a in i['annotations'] if a['class']=='rect']
-        d[i["filename"]]= annotations
-    
+        annotations = [a for a in i['annotations'] if a['class'] == 'rect']
+        d[i["filename"]] = annotations
+
     # populating X and y
-    X=[]
-    y=[]
+    X = []
+    y = []
     for key,value in d.items():
         X.append(ndimage.imread(imagesDir+os.path.basename(key)))
         y.append(value)
-        
-    fileNames=d.keys()
-    return X,y,fileNames
+
+    fileNames = d.keys()
+    return X, y, fileNames
 
 def saveSloth(fileNames, y):
-    annotations=[]
+    annotations = []
     for idx, imageName in enumerate(fileNames):
-        entry={
-            "annotations": y[idx],
-            "class": "rect",
-            "filename": imageName
+        entry = {
+            "annotations" : y[idx],
+            "class" : "rect",
+            "filename" : imageName
         }
         annotations.append(entry)
-    slothFile=json.dumps(annotations)
+    slothFile = json.dumps(annotations)
     return slothFile

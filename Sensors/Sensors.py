@@ -2,8 +2,17 @@
 
 import GPIO
 import time
+import rospy
+from mavros_msgs.msg import ManualControl
 
 
+class publish:
+    def __init__:
+        self.pub=rospy.Publisher("manual_control/control",ManualControl, queue_size=1)
+        rospy.init_node('SR04', anonymous=False)
+        rate = rospy.Rate(10) # 10hz
+    def pub(values)
+        self.pub.publish(values)
 
 
 class SR04:

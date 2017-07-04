@@ -4,7 +4,7 @@ from pprint import pprint
 
 
 convert = True
-check = False
+check = True
 
 
 with open('./Sofia/grapes1.json') as grape_file:
@@ -42,7 +42,7 @@ if convert:
                         for element in grape1:
                             if element['annotations'] != [] and os.path.basename(element['filename']) == filename:
                                 for annotation in element['annotations']:
-                                    print('CHANGED', annotation, end='')
+                                    print('CHANGED', str(annotation)[:35], end='')
                                     try:
                                         annotation['x'], annotation['y'] = float(height) - annotation['y'] - annotation['width'], annotation['x']
                                     except:
@@ -50,12 +50,12 @@ if convert:
                                     try:
                                         annotation['width'], annotation['height'] = annotation['height'], annotation['width']
                                     except: pass
-                                    print(' WITH ', annotation)
+                                    print(' WITH ', str(annotation)[:35])
 
                         for element in grape2_1:
                             if element['annotations'] != [] and os.path.basename(element['filename']) == filename:
                                 for annotation in element['annotations']:
-                                    print('CHANGED', annotation, end='')
+                                    print('CHANGED', str(annotation)[:35], end='')
                                     try:
                                         annotation['x'], annotation['y'] = float(height) - annotation['y'] - annotation['width'], annotation['x']
                                     except:
@@ -63,12 +63,12 @@ if convert:
                                     try:
                                         annotation['width'], annotation['height'] = annotation['height'], annotation['width']
                                     except: pass
-                                    print(' WITH ', annotation)
+                                    print(' WITH ', str(annotation)[:35])
 
                         for element in grape2_2:
                             if element['annotations'] != [] and os.path.basename(element['filename']) == filename:
                                 for annotation in element['annotations']:
-                                    print('CHANGED', annotation, end='')
+                                    print('CHANGED', str(annotation)[:35], end='')
                                     try:
                                         annotation['x'], annotation['y'] = float(height) - annotation['y'] - annotation['width'], annotation['x']
                                     except:
@@ -76,7 +76,7 @@ if convert:
                                     try:
                                         annotation['width'], annotation['height'] = annotation['height'], annotation['width']
                                     except: pass
-                                    print(' WITH ', annotation)
+                                    print(' WITH ', str(annotation)[:35])
 
                         height, width = width, height
 
@@ -117,6 +117,15 @@ if convert:
                                 except: pass
 
                     print(filename, 'CONVERSION COMPLETED!')
+
+        with open('./Sofia/grapes1.json', 'w') as grape_file:
+            json.dump(grape1, grape_file)
+
+        with open('./Sabrina/grapes2_1.json', 'w') as grape_file:
+            json.dump(grape2_1, grape_file)
+
+        with open('./Martina/grapes2_2.json', 'w') as grape_file:
+            json.dump(grape2_2, grape_file)
 
         if check:
             for filename in f:

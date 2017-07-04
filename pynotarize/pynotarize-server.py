@@ -26,7 +26,6 @@ def store_receipt():
     token = auth_response['access_token']
     
     # Get the receipt for the digest using the receiptId
-    print(request.args)
     receiptURL = 'https://hashapi.tierion.com/v1/receipts/' + request.args['receiptId']
     receipt = json.loads(requests.get(
         url=receiptURL,
@@ -35,8 +34,16 @@ def store_receipt():
             'content-type': 'application/json'
         }
     ).text)['receipt']
-    print('three')
+
     # Store (digest, receipt) in the database
     database.set(request.args['digest'], receipt)
 
+    # Unsubscribe from notifications about this receipt
+    deleteURL = 'https://hashapi.tierion.com/v1/blocksubscriptions/' + request.args['receiptId']
+    requests.delete(url=deleteURL,
+                    headers = {
+                        'Authorization': 'Bearer ' + token,
+                        'content-type': 'application/json'
+                    })
+    
     return ''

@@ -21,7 +21,10 @@ class SR04:
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         self.initialized.append(TRIG)
-    def takeDistance(self,TRIG,ECHO,trust=False,numIteration=1):
+    def takeDistance(self,TRIG=None,ECHO=None,couple=None,trust=False,numIteration=1):
+        if couple:
+            TRIG=couple[0]
+            ECHO=couple[1]
         if not TRIG in self.initialized:
             self.initialize(TRIG,ECHO)
         distance=[]

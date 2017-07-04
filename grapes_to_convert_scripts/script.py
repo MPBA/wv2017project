@@ -2,8 +2,10 @@ import os
 import json
 from pprint import pprint
 
+
 convert = True
-check = True
+check = False
+
 
 with open('./Sofia/grapes1.json') as grape_file:
     print(type(grape_file))
@@ -21,7 +23,7 @@ if convert:
         for filename in f:
             result = os.popen('identify ' + p + "/" + filename).read()
             if result:
-                print(result)
+                # print(result)
                 result = result.split()[2]
                 if result != "720x1280": # if the resolution is not the right one
                     width, height = result.split('x')[0], result.split('x')[1]
@@ -42,7 +44,6 @@ if convert:
                             annotations = imagedata['annotations']
                         """
 
-
                     # rescaling image to fit size
                     os.system('convert ' + p + '/' + filename +' -resize 720x1280! ' + p + '/' + filename + '_resized.jpg')
                     os.system('rm ' + p + "/" + filename)
@@ -50,6 +51,8 @@ if convert:
 
                     # TODO SCALE JSON TO MATCH
 
+                    print(filename, 'CONVERSION COMPLETED!')
+clea
         if check:
             for filename in f:
                 result = os.popen('identify ' + p + "/" + filename).read()

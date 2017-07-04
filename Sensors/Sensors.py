@@ -1,11 +1,9 @@
-#!/bin/python2
-
-import GPIO
+import RPi.GPIO as GPIO
 import time
-import rospy
-from mavros_msgs.msg import ManualControl
+#import rospy
+#from mavros_msgs.msg import ManualControl
 
-
+'''
 class publish:
     def __init__:
         self.pub=rospy.Publisher("manual_control/control",ManualControl, queue_size=1)
@@ -13,22 +11,22 @@ class publish:
         rate = rospy.Rate(10) # 10hz
     def pub(values)
         self.pub.publish(values)
-
+'''
 
 class SR04:
     initialized=[]
-    def initialize(TRIG,ECHO):
+    def initialize(self,TRIG,ECHO):
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         self.initialized.append(TRIG)
     def takeDistance(self,TRIG=None,ECHO=None,couple=None,trust=False,numIteration=1):
-        if couple:
-            TRIG=couple[0]
-            ECHO=couple[1]
+        #if couple:
+            #TRIG=couple[0]
+            #ECHO=couple[1]
         if not TRIG in self.initialized:
             self.initialize(TRIG,ECHO)
         distance=[]
-        for i in numIteration:
+        for i in range(numIteration):
             GPIO.output(TRIG, True)
             time.sleep(0.00001)
             GPIO.output(TRIG, False)
@@ -52,6 +50,9 @@ class SR04:
 
 
 
-if __name__='__main__':
+if __name__=='__main__':
+    GPIO.setmode(GPIO.BOARD)
     dist=SR04()
-    dist.takeDistance(18,19)
+    while True:
+        print dist.takeDistance(TRIG=11,ECHO=13)
+        time.sleep(0.1)

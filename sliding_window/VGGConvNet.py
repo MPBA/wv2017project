@@ -8,8 +8,7 @@ from skimage import data
 from scipy import misc
 import h5py
 from keras.utils.io_utils import HDF5Matrix
-from multi_gpu import make_parallel
-
+from quiver_engine import server
 
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv2D
@@ -49,12 +48,18 @@ try:
         #print(X_train.shape,Y_train.shape,X_test.shape,Y_test.shape)
         #print(type(X_train),type(Y_train),type(X_test),type(Y_test))
         #file.close()
-        X_train = HDF5Matrix('apple_classification_float.h5', 'X_train')
-        Y_train = HDF5Matrix('apple_classification_float.h5', 'Y_train')
-        X_test = HDF5Matrix('apple_classification_float.h5', 'X_test')
-        Y_test = HDF5Matrix('apple_classification_float.h5', 'Y_test')
+        X_train = HDF5Matrix('apples_classification_dataset.h5', 'X_train')
+        X_train = X_train[0:15000]
+        print(X_train.shape)
+        Y_train = HDF5Matrix('apples_classification_dataset.h5', 'Y_train')
+        Y_train = Y_train[0:15000]
+        print(Y_train.shape)
+        X_test = HDF5Matrix('apples_classification_dataset.h5', 'X_test')
+        Y_test = HDF5Matrix('apples_classification_dataset.h5', 'Y_test')
 except (IOError, KeyError):        
-        #print(e)
+        print(e)
+        
+        '''
         X = np.zeros((num_bad+num_good,image_size,image_size,3))
         y = np.zeros((num_bad+num_good))
 
@@ -96,7 +101,8 @@ except (IOError, KeyError):
                 file.create_dataset('X_test', shape=X_test.shape, compression=None, dtype='float32', data=X_test)
                 file.create_dataset('Y_test', shape=Y_test.shape, compression=None, dtype='float32', data=Y_test)
         exit()
-        
+        '''
+
 # build model
 print("Building Model...")
 resnet = VGG16(include_top=False, weights='imagenet', input_tensor=(Input(shape=(image_size, image_size, 3))))
@@ -124,30 +130,39 @@ model = Model(inputs=resnet.input, outputs=predictions)
 
 #model = make_parallel(model, 2)
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+adam = optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
 print(model.summary())
 
-load_weights = False
+load_weights = True
 if(load_weights):
-        model.load_weights("model_weights.h5")
+	model.load_weights("VGGConv_weights.h5")
+	loss, accuracy = model.evaluate(X_test, Y_test, verbose=0)
+	print('Test Loss:', loss)
+	print('Test Accuracy:', accuracy)
+        server.launch(model, temp_folder="./quiver_temp", input_folder="./quiver_test", port=8090)
 else:
 	print("Training Model...")
-	early_stop = [callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')]
-	#model.fit_generator(datagen.flow(X_train, y_train, batch_size=16), steps_per_epoch=len(X_train) / 16, epochs=10, verbose=1, validation_data=(X_test, y_test), callbacks=early_stop)
-	model.fit(X_train, Y_train, batch_size=32*2, epochs=100, verbose=1, validation_data=(X_test, Y_test), callbacks=early_stop, shuffle='batch')
+	early_stop = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=4, verbose=0, mode='auto')
+	checkpoint = callbacks.ModelCheckpoint("./checkpoint/weights.{epoch:02d}-{val_loss:.2f}.hdf5", save_weights_only=True,)
+	callback = [early_stop, checkpoint]
+        #model.fit_generator(datagen.flow(X_train, y_train, batch_size=16), steps_per_epoch=len(X_train) / 16, epochs=10, verbose=1, validation_data=(X_test, y_test), callbacks=early_stop)
+	model.fit(X_train, Y_train, batch_size=48*2, epochs=100, verbose=1, validation_data=(X_test, Y_test), callbacks=callback, shuffle='batch')
 
 	print("Saving Model...")
 	model.save_weights("model_weights.h5")
 
+'''
 print("Generating ROC...")
 
 #run test set
 output = 1000*(model.predict(X_test))
-print(output.dtype)
+#print(output.dtype)
 
 num_pos = 0
 num_neg = 0
 
+print("Connecting labels and errors")
 #connect label and error
 roc = np.zeros((len(output),2))
 for index,out in enumerate(output):
@@ -158,6 +173,7 @@ for index,out in enumerate(output):
 	else:
 		num_neg+=1
 
+print("Sorting errors")
 #sort by error
 for x in range(len(roc)-1):
 	for y in range(x, len(roc)):
@@ -169,6 +185,7 @@ for x in range(len(roc)-1):
 			roc[y,0] = temp
 			roc[y,1] = temp2
 
+print("Saving ROC")
 f = open("ROC.txt","w")
 #build curve
 x0 = 0
@@ -183,3 +200,4 @@ for i in range(len(roc)):
 f.close()
 
 #use gnuplot
+'''
